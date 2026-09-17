@@ -16,6 +16,6 @@ yet registered and must be added via local dev paths:
 ```julia
 using Pkg
 Pkg.develop(path="../ForsetiCore.jl")
-Pkg.develop(path=".")
-Pkg.test("ForsetiMultivariate")
+Pkg.instantiate()
+Pkg.test()
 ```
