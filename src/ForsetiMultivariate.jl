@@ -61,6 +61,31 @@ end
 
 Principal component analysis of the columns of `X` (observations in
 rows), via SVD of the (optionally centered/scaled) data matrix.
+
+# Formula
+
+For (optionally centered/scaled) data matrix `Xc = UΣVᵀ` (SVD):
+
+```
+loadings = V
+scores   = UΣ
+sdev_j   = Σⱼⱼ / √(n-1)
+var_explained_j = Σⱼⱼ² / Σᵢ Σᵢᵢ²
+```
+
+Computing PCA via the SVD of the data matrix directly (rather than the
+eigendecomposition of the covariance matrix) avoids ever forming `XᵀX`,
+which is the numerically preferred approach.
+
+# References
+
+- Pearson, K. (1901). On lines and planes of closest fit to systems of
+  points in space. *Philosophical Magazine, Series 6*, 2(11), 559–572.
+- Hotelling, H. (1933). Analysis of a complex of statistical variables
+  into principal components. *Journal of Educational Psychology*, 24(6),
+  417–441.
+- Golub, G. H., & Van Loan, C. F. (2013). *Matrix Computations* (4th
+  ed.). Johns Hopkins University Press. (SVD-based computation)
 """
 function pca(X::AbstractMatrix{<:Real}; center::Bool = true, scale::Bool = false)
     n, p = size(X)
@@ -228,6 +253,31 @@ algorithm, using k-means++ initialization and `n_init` restarts (keeping
 the run with the lowest total within-cluster sum of squares) unless
 explicit starting `centers` are given via `init` (a `k x size(X,2)`
 matrix), in which case a single deterministic run is performed.
+
+# Formula
+
+Lloyd's algorithm alternates, until assignments stop changing:
+
+```
+assign each point to the nearest center (Euclidean distance)
+recompute each center as the mean of its assigned points
+```
+
+minimizing total within-cluster sum of squares
+`Σₖ Σᵢ∈cluster k ‖xᵢ - centerₖ‖²`. k-means++ initialization picks the
+first center uniformly at random, then each subsequent center from the
+remaining points with probability proportional to its squared distance
+to the nearest already-chosen center — this spreads the initial centers
+out and gives better expected quality than uniform random init.
+
+# References
+
+- Lloyd, S. P. (1982). Least squares quantization in PCM. *IEEE
+  Transactions on Information Theory*, 28(2), 129–137. (written 1957,
+  published 1982)
+- Arthur, D., & Vassilvitskii, S. (2007). k-means++: The advantages of
+  careful seeding. *Proceedings of the 18th Annual ACM-SIAM Symposium on
+  Discrete Algorithms*, 1027–1035.
 """
 function kmeans_cluster(X::AbstractMatrix{<:Real}, k::Int; max_iter::Int = 100, n_init::Int = 10,
                          init::Union{Nothing,AbstractMatrix} = nothing,
@@ -331,6 +381,32 @@ end
 
 One-way MANOVA testing whether the mean vector of the columns of `Y`
 differs across the levels of `groups`, via Wilks' Lambda.
+
+# Formula
+
+```
+B = Σₖ nₖ(x̄ₖ - x̄)(x̄ₖ - x̄)ᵀ    (between-groups SSCP matrix)
+W = Σₖ Σᵢ (xᵢₖ - x̄ₖ)(xᵢₖ - x̄ₖ)ᵀ  (within-groups SSCP matrix)
+Λ = det(W) / det(W + B)          (Wilks' Lambda)
+```
+
+Two of Λ's exact F-transforms are used here (`exact = true`): `p = 1`
+(reduces algebraically to the univariate [`anova`](@ref) F-statistic),
+and `dfH = g-1 = 1` (two groups), the latter derived directly from the
+Hotelling's `T²` two-sample relationship `T² = dfE(1-Λ)/Λ` and
+`F = (dfE-p+1)/(p·dfE) · T²`. Other combinations of `p`/group count fall
+back to Bartlett's large-sample chi-square approximation (`exact =
+false`): `χ² = -(dfE - (p-dfH+1)/2) ln Λ ~ χ²(p·dfH)`.
+
+# References
+
+- Wilks, S. S. (1932). Certain generalizations in the analysis of
+  variance. *Biometrika*, 24(3/4), 471–494.
+- Hotelling, H. (1931). The generalization of Student's ratio. *Annals
+  of Mathematical Statistics*, 2(3), 360–378. (`T²`, the 2-group case)
+- Bartlett, M. S. (1938). Further aspects of the theory of multiple
+  regression. *Mathematical Proceedings of the Cambridge Philosophical
+  Society*, 34(1), 33–40. (chi-square approximation)
 """
 function manova(Y::AbstractMatrix{<:Real}, groups::AbstractVector)
     n, p = size(Y)
