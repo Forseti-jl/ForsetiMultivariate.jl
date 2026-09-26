@@ -4,7 +4,7 @@
 Multivariate statistics: PCA, k-means clustering, and one-way MANOVA.
 
 Follows the family-wide pipe-curried calling convention and returns
-`ForsetiFit` subtypes usable with [`tidy`](@ref)/[`glance`](@ref)/[`augment`](@ref):
+`ForsetiFit` subtypes usable with `tidy`/`glance`/`augment` (from `ForsetiCore`):
 
 ```julia
 df |> pca(:x1, :x2, :x3) |> tidy               # loadings, by default
@@ -39,7 +39,7 @@ end
 """
     PCAFit <: ForsetiFit
 
-Result of [`pca`](@ref). [`tidy`](@ref) accepts a `matrix` keyword
+Result of [`pca`](@ref). `tidy` (from `ForsetiCore`) accepts a `matrix` keyword
 (`:loadings` (default), `:scores`, or `:eigenvalues`), mirroring
 `broom::tidy.prcomp`.
 """
@@ -391,7 +391,8 @@ W = Σₖ Σᵢ (xᵢₖ - x̄ₖ)(xᵢₖ - x̄ₖ)ᵀ  (within-groups SSCP mat
 ```
 
 Two of Λ's exact F-transforms are used here (`exact = true`): `p = 1`
-(reduces algebraically to the univariate [`anova`](@ref) F-statistic),
+(reduces algebraically to the univariate `anova` F-statistic, from
+`ForsetiHypothesis`),
 and `dfH = g-1 = 1` (two groups), the latter derived directly from the
 Hotelling's `T²` two-sample relationship `T² = dfE(1-Λ)/Λ` and
 `F = (dfE-p+1)/(p·dfE) · T²`. Other combinations of `p`/group count fall
